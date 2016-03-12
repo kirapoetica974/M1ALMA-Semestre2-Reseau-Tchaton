@@ -52,23 +52,23 @@ void renvoi (int sock) {
 void *connection_handler(void *socket_desc){
 	
 	char buffer[256];
-    int longueur;
+    	int longueur;
 	int sock = *(int*)socket_desc;
 	int i=0;
-
+	
 	//Reception du message envoye par le client
+	printf("sock envoi : %d", sock); 
 	while((longueur = read(sock, buffer, sizeof(buffer))) > 0 ){
-		// Modification message
-		buffer[0] = 'R';
+	// Modification message
+	buffer[0] = 'R';
     	buffer[1] = 'E';
     	buffer[longueur] = '#';
     	buffer[longueur+1] ='\0';
 
-		//envoie d'un message au client
-		write(sock, buffer, strlen(buffer)+1);
+	//envoie d'un message au client
+	write(sock, buffer, strlen(buffer)+1);
 
-		printf("message envoye :  %s \n", buffer);															
-
+	printf("message envoye :  %ssocket : %d", buffer, sock);
 		//on envoie a tous les clients
 		/*while(tabClient[indiceTabClient]!=0){
 			printf("Indice : %d / Tab : %d\n", indiceTabClient, tabClient[indiceTabClient]);
@@ -86,7 +86,7 @@ void *connection_handler(void *socket_desc){
 	}
 	else if(longueur == -1){
 		
-		perror("Echec de la recption du message");
+		perror("Echec de la reception du message");
 	}
 
 	//on libere la memoire

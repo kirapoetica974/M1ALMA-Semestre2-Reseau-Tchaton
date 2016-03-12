@@ -82,31 +82,55 @@ int main(int argc, char **argv) {
     }
     
     printf("connexion etablie avec le serveur. \n");
+
+	while(1)
+	{
+		printf("Votre message : ");
+		fgets(mesg, sizeof mesg, stdin);
+		printf("envoi d'un message au serveur. \n");
+		
+		//envoi des données au serveur
+		if ((write(socket_descriptor, mesg, strlen(mesg))) < 0) {
+			perror("erreur : impossible d'ecrire le message destine au serveur.");
+			exit(1);
+    	}
+		
+		sleep(3);
+    	printf("message envoye au serveur. \n");
+
+		if((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
+			printf("reponse du serveur : \n");
+			write(1,buffer,longueur);
+    	}
     
-	printf("Votre message : ");
+    	printf("\nfin de la reception.\n");
+	}
 
-	scanf("%s",mesg); 
+	close(socket_descriptor);
+	return 0;
 
-    printf("envoi d'un message au serveur. \n");
+	//scanf("%s",mesg);    
+
+    //printf("envoi d'un message au serveur. \n");
       
     /* envoi du message vers le serveur */
-    if ((write(socket_descriptor, mesg, strlen(mesg))) < 0) {
+    /*if ((write(socket_descriptor, mesg, strlen(mesg))) < 0) {
 	perror("erreur : impossible d'ecrire le message destine au serveur.");
 	exit(1);
-    }
+    }*/
     
     /* mise en attente du prgramme pour simuler un delai de transmission */
-    sleep(3);
+    /*sleep(3);
      
-    printf("message envoye au serveur. \n");
+    printf("message envoye au serveur. \n");*/
                 
     /* lecture de la reponse en provenance du serveur */
-    while((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
+    /*while((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
 	printf("reponse du serveur : \n");
 	write(1,buffer,longueur);
     }
     
-    printf("\nfin de la reception.\n");
+    printf("\nfin de la reception.\n");*/
     
     //close(socket_descriptor);
     
