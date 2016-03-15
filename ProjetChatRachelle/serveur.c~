@@ -15,6 +15,14 @@ typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
 typedef struct servent servent;
 
+typedef struct TabPseudoSocket TabPseudoSocket;
+struct TabPseudoSocket{
+	int socket;
+	char * pseudo;
+};
+
+TabPseudoSocket tabClient2;
+
 int tabClient[3] = {0,0,0};
 int indiceTabClient=0;
 
@@ -56,6 +64,22 @@ void *connection_handler(void *socket_desc){
 	int sock = *(int*)socket_desc;
 	int i=0;
 
+	printf("TabPseudoSocket : %d octets\n", sizeof(TabPseudoSocketà));
+
+	if((longueur = read(sock, buffer, sizeof(buffer))) > 0){
+		char pseudoClient[256];
+		tabClient2.pseudo = buffer;
+		tabClient2.socket = sock;
+		
+		char msg[26] = "Nouveau client ajouté";
+		//strcat(msg,"Nouveau client connecté :");
+		//strcat(msg,buffer);
+		
+		write(sock, msg, strlen(msg));
+
+		printf("Nouveau client connecté :  %s ", buffer);
+	}
+	
 	//Reception du message envoye par le client
 	while((longueur = read(sock, buffer, sizeof(buffer))) > 0 ){
 		// Modification message
@@ -65,16 +89,16 @@ void *connection_handler(void *socket_desc){
     	buffer[longueur+1] ='\0';
 
 		//envoie d'un message au client
-		//write(sock, buffer, strlen(buffer)+1);
+		write(sock, buffer, strlen(buffer)+1);
 
 		printf("message envoye :  %s \n", buffer);															
 
 		//on envoie a tous les clients
-		while(tabClient[indiceTabClient]!=0){
+		/*while(tabClient[indiceTabClient]!=0){
 			printf("Indice : %d / Tab : %d\n", indiceTabClient, tabClient[indiceTabClient]);
 			write(tabClient[indiceTabClient], buffer, strlen(buffer)+1);
 			i++;
-		}
+		}*/
 
 	}
 
@@ -131,16 +155,16 @@ main(int argc, char **argv) {
     
     /*-----------------------------------------------------------*/
     /* SOLUTION 1 : utiliser un service existant, par ex. "irc" */
-    /*
+    
     if ((ptr_service = getservbyname("irc","tcp")) == NULL) {
 		perror("erreur : impossible de recuperer le numero de port du service desire.");
 		exit(1);
     }
     adresse_locale.sin_port = htons(ptr_service->s_port);
-    */
+    
     /*-----------------------------------------------------------*/
     /* SOLUTION 2 : utiliser un nouveau numero de port */
-    adresse_locale.sin_port = htons(5000);
+    //adresse_locale.sin_port = htons(5000);
     /*-----------------------------------------------------------*/
     
     printf("numero de port pour la connexion au serveur : %d \n", 

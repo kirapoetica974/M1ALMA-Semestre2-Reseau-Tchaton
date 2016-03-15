@@ -21,7 +21,7 @@ struct TabPseudoSocket{
 	char * pseudo;
 };
 
-TabPseudoSocket tabClient2 = {0,""};
+TabPseudoSocket tabClient2;
 
 int tabClient[3] = {0,0,0};
 int indiceTabClient=0;
@@ -63,6 +63,8 @@ void *connection_handler(void *socket_desc){
     int longueur;
 	int sock = *(int*)socket_desc;
 	int i=0;
+
+	printf("TabPseudoSocket : %d octets\n", sizeof(TabPseudoSocket));
 
 	if((longueur = read(sock, buffer, sizeof(buffer))) > 0){
 		char pseudoClient[256];

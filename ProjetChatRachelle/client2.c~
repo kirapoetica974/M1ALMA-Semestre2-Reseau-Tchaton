@@ -53,41 +53,59 @@ int main(int argc, char **argv) {
     
     /*-----------------------------------------------------------*/
     /* SOLUTION 1 : utiliser un service existant, par ex. "irc" */
-    /*
+    
     if ((ptr_service = getservbyname("irc","tcp")) == NULL) {
 	perror("erreur : impossible de recuperer le numero de port du service desire.");
 	exit(1);
     }
     adresse_locale.sin_port = htons(ptr_service->s_port);
-    */
+    
     /*-----------------------------------------------------------*/
     
     /*-----------------------------------------------------------*/
     /* SOLUTION 2 : utiliser un nouveau numero de port */
-    adresse_locale.sin_port = htons(5000);
+    //adresse_locale.sin_port = htons(5000);
     /*-----------------------------------------------------------*/
     
     printf("numero de port pour la connexion au serveur : %d \n", ntohs(adresse_locale.sin_port));
     
+    
+    
     /* creation de la socket */
     if ((socket_descriptor = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-	perror("erreur : impossible de creer la socket de connexion avec le serveur.");
-	exit(1);
+		perror("erreur : impossible de creer la socket de connexion avec le serveur.");
+		exit(1);
     }
     
     /* tentative de connexion au serveur dont les infos sont dans adresse_locale */
     if ((connect(socket_descriptor, (sockaddr*)(&adresse_locale), sizeof(adresse_locale))) < 0) {
-	perror("erreur : impossible de se connecter au serveur.");
-	exit(1);
+		perror("erreur : impossible de se connecter au serveur.");
+		exit(1);
     }
     
-    printf("connexion etablie avec le serveur. \n");
+    
 
+
+
+	// On demande au client son pseudo puis on l'envoie au serveur
+	char pseudo[256];
+    printf("Quelle est votre pseudo ?");
+    scanf("%s",pseudo);
+    
+    if ((write(socket_descriptor, pseudo, strlen(pseudo))) < 0) {
+		perror("erreur : impossible d'envoyer le pseudo au serveur.");
+		exit(1);
+    }
+    
+    
+    printf("connexion etablie avec le serveur. \n");
+    
+    
 	while(1)
 	{
 		printf("Votre message : ");
 		fgets(mesg, sizeof mesg, stdin);
-		printf("envoi d'un message au serveur. \n");
+		printf("Envoi d'un message au serveur. \n");
 		
 		//envoi des données au serveur
 		if ((write(socket_descriptor, mesg, strlen(mesg))) < 0) {
@@ -106,7 +124,7 @@ int main(int argc, char **argv) {
     	printf("\nfin de la reception.\n");
 	}
 
-	close(sock);
+	close(socket_descriptor);
 	return 0;
 
 	//scanf("%s",mesg);    
