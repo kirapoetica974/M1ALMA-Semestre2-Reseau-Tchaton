@@ -27,7 +27,6 @@ void *connection_handler(void *socket_desc){
 		fgets(mesg, sizeof mesg, stdin);
 		
 		printf("envoi d'un message au serveur... \n");
-		
 
 		//envoi des données au serveur
 		if ((write(sock, mesg, strlen(mesg))) < 0) {

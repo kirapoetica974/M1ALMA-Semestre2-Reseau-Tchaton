@@ -73,7 +73,7 @@ void *connection_handler(void *socket_desc){
 	if(longueur == 0){
 
 		printf("Client deconnecte\n");
-		printf("sock : %d",sock);
+		
 		fflush(stdout);
 	}
 	else if(longueur == -1){
