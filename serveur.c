@@ -33,9 +33,12 @@ void *connection_handler(void *socket_desc){
 	memset(buffer,0,sizeof(buffer));
 	memset(p,0,sizeof(p));
 	int i=0;
+	int j;
 	int trouveCaseLibre = 0;
 	char infoPseudo[30];
 	char newBuffer[272];
+	char bufferPrive[256];
+	char pseudoDestinataire[10];
 
 	//Reception du pseudo client
 	if(longueur = read(sock, p, sizeof(p)) > 0){
@@ -69,7 +72,7 @@ void *connection_handler(void *socket_desc){
 		for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
 			if(tabPseudoSock[i].socket!=0 && tabPseudoSock[i].socket!=sock){
 				write(tabPseudoSock[i].socket, infoPseudo, strlen(infoPseudo));
-				printf("pseudo envoye :  %s\n", infoPseudo);
+				printf("pseudo envoye : %s\n", infoPseudo);
 			}
 		}
 	}
@@ -87,22 +90,70 @@ void *connection_handler(void *socket_desc){
 			}
 		}
 		
-		//Message a envoyer avec le pseudo récupéré
-		strcat(pseudoClient," : ");
-		strcpy(newBuffer,pseudoClient);
-		strcat(newBuffer,buffer);
-
-		//On envoie a tous les clients
-		for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
-			if(tabPseudoSock[i].socket!=0 && tabPseudoSock[i].socket!=sock){
-				write(tabPseudoSock[i].socket, newBuffer, strlen(newBuffer));
-				printf("message envoye :  %s\n", newBuffer);
+		//Est ce que c'est un message privé ?
+		if(buffer[0]=='/'){
+			printf("prive");
+			i=1;
+			j=0;
+			//Séparation du pseudo destinataire et du message
+			while(buffer[i]!=' '){
+				pseudoDestinataire[j] = buffer[i];
+				printf("%s ",pseudoDestinataire);
+				i++;
+				j++;
 			}
+			i++;
+			j=0;
+
+			while(buffer[i]!='\0'){					
+				bufferPrive[j]=buffer[i];
+				j++;
+				i++;
+			}
+					
+			//Composition du message privé
+			strcat(pseudoClient," : ");
+			strcpy(newBuffer,pseudoClient);
+			strcat(newBuffer,bufferPrive);
+
+			//Recherche de la socket associée au pseudo destinataire
+			i=0;			
+			while(i<(sizeof(tabPseudoSock)/sizeof(PseudoSock))){
+				if(strcmp(tabPseudoSock[i].pseudo,pseudoDestinataire)==0){
+					//Envoi du message privé
+					write(tabPseudoSock[i].socket, newBuffer, strlen(newBuffer));
+					printf("message prive envoye :  %s\n", newBuffer);
+					break;
+				}
+				i++;
+			}
+			//On remet à zéro les buffers
+			memset(buffer,0,sizeof(buffer));
+			memset(newBuffer,0,sizeof(newBuffer));
+			memset(bufferPrive,0,sizeof(bufferPrive));
+			memset(pseudoClient,0,sizeof(pseudoClient));
+			memset(pseudoDestinataire,0,sizeof(pseudoDestinataire));	
 		}
-		//On remet à zéro le buffer
-		memset(buffer,0,sizeof(buffer));
-		memset(newBuffer,0,sizeof(newBuffer));
-		memset(pseudoClient,0,sizeof(pseudoClient));
+		
+		//Message publique
+		else{
+			//Message a envoyer avec le pseudo récupéré
+			strcat(pseudoClient," : ");
+			strcpy(newBuffer,pseudoClient);
+			strcat(newBuffer,buffer);
+
+			//On envoie a tous les clients
+			for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
+				if(tabPseudoSock[i].socket!=0 && tabPseudoSock[i].socket!=sock){
+					write(tabPseudoSock[i].socket, newBuffer, strlen(newBuffer));
+					printf("message envoye :  %s\n", newBuffer);
+				}
+			}
+			//On remet à zéro le buffer
+			memset(buffer,0,sizeof(buffer));
+			memset(newBuffer,0,sizeof(newBuffer));
+			memset(pseudoClient,0,sizeof(pseudoClient));
+		}
 	}
 
 	if(longueur == 0){

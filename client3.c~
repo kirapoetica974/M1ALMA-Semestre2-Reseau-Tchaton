@@ -26,7 +26,7 @@ void *connection_handler(void *socket_desc){
 		memset(mesg,0,sizeof(mesg));
 		fgets(mesg, sizeof mesg, stdin);
 		
-		printf("envoi d'un message au serveur... \n");
+		printf("Envoi d'un message au serveur... \n");
 
 		//envoi des données au serveur
 		if ((write(sock, mesg, strlen(mesg))) < 0) {
@@ -35,9 +35,9 @@ void *connection_handler(void *socket_desc){
     	}
 		
 		//sleep(3);
-    	printf("message envoye au serveur. \n");
+    	printf("Message envoye au serveur.\n");
 		//memset(mesg,0,sizeof(mesg));
-		printf("Ecrivez votre message...\n ");
+		printf("Ecrivez votre message...\n");
 	}
 	
 	//on libere la memoire
@@ -137,10 +137,9 @@ int main(int argc, char **argv) {
 
 	while(1){
 		if((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
-			printf("Message recu : \n");
 			write(1,buffer,longueur);
 			memset(buffer,0,sizeof(buffer));
-			printf("Ecrivez votre message...\n ");
+			printf("Ecrivez votre message...\n");
 		}
     }
 
