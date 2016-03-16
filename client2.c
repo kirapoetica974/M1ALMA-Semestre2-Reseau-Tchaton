@@ -27,7 +27,6 @@ void *connection_handler(void *socket_desc){
 		fgets(mesg, sizeof mesg, stdin);
 		
 		printf("envoi d'un message au serveur... \n");
-		
 
 		//envoi des données au serveur
 		if ((write(sock, mesg, strlen(mesg))) < 0) {
@@ -62,15 +61,15 @@ int main(int argc, char **argv) {
     //char mesg[255]; 			/* message envoyé */
      
     if (argc != 2) {
-	perror("usage : client <adresse-serveur>");
+	perror("Usage : client <adresse-serveur>");
 	exit(1);
     }
    
     prog = argv[0];
     host = argv[1];
     
-    printf("nom de l'executable : %s \n", prog);
-    printf("adresse du serveur  : %s \n", host);
+    printf("- Nom de l'executable : %s \n", prog);
+    printf("- Adresse du serveur  : %s \n", host);
 
     if ((ptr_host = gethostbyname(host)) == NULL) {
 	perror("erreur : impossible de trouver le serveur a partir de son adresse.");
@@ -100,7 +99,7 @@ int main(int argc, char **argv) {
     adresse_locale.sin_port = htons(5000);
     /*-----------------------------------------------------------*/
     
-    printf("numero de port pour la connexion au serveur : %d \n", ntohs(adresse_locale.sin_port));
+    printf("- Numero de port pour la connexion au serveur : %d \n\n", ntohs(adresse_locale.sin_port));
     
     /* creation de la socket */
     if ((socket_descriptor = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -114,7 +113,7 @@ int main(int argc, char **argv) {
 	exit(1);
     }
     
-    printf("connexion etablie avec le serveur. \n");
+    printf("Connexion etablie avec le serveur :) \n\n");
 
 	char pseudo[10];
     printf("Quel est votre pseudo ? ");
@@ -138,7 +137,6 @@ int main(int argc, char **argv) {
 
 	while(1){
 		if((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
-			printf("Message recu : \n");
 			write(1,buffer,longueur);
 			memset(buffer,0,sizeof(buffer));
 			printf("Ecrivez votre message...\n ");

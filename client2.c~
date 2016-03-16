@@ -116,6 +116,17 @@ int main(int argc, char **argv) {
     
     printf("connexion etablie avec le serveur. \n");
 
+	char pseudo[10];
+    printf("Quel est votre pseudo ? ");
+    fgets(pseudo, sizeof pseudo, stdin);
+    
+    if ((write(socket_descriptor, pseudo, strlen(pseudo))) < 0) {
+		perror("erreur : impossible d'envoyer le pseudo au serveur.");
+		exit(1);
+    }
+
+	printf("pseudo OK\n");
+
 	pthread_t sniffer_thread;
 	new_sock = malloc(1);
 	*new_sock = socket_descriptor;

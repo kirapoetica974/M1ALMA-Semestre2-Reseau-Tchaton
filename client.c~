@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
     printf("connexion etablie avec le serveur. \n");
 
 	char pseudo[10];
-    printf("Quel est votre pseudo ?");
+    printf("Quel est votre pseudo ? ");
     fgets(pseudo, sizeof pseudo, stdin);
     
     if ((write(socket_descriptor, pseudo, strlen(pseudo))) < 0) {
