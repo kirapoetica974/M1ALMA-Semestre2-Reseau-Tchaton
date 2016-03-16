@@ -15,6 +15,22 @@ typedef struct sockaddr_in 	sockaddr_in;
 typedef struct hostent 		hostent;
 typedef struct servent 		servent;
 
+void viderBuffer()
+
+{
+
+    int c = 0;
+
+    while (c != '\n' && c != EOF)
+
+    {
+
+        c = getchar();
+
+    }
+
+}
+
 void *connection_handler(void *socket_desc){
 	
 	char mesg[256];
@@ -116,15 +132,42 @@ int main(int argc, char **argv) {
     printf("Connexion etablie avec le serveur :) \n\n");
 
 	char pseudo[10];
-    printf("Quel est votre pseudo ? ");
-    fgets(pseudo, sizeof pseudo, stdin);
-    
-    if ((write(socket_descriptor, pseudo, strlen(pseudo))) < 0) {
-		perror("erreur : impossible d'envoyer le pseudo au serveur.");
-		exit(1);
-    }
+	int pseudoCorrect=0;
+	int i;
+	int pseudoLibre=0;
 
-	printf("pseudo OK\n");
+	//Pseudo libre ?
+	while(pseudoLibre==0){
+		//Controle du pseudo (pas de caracteres spéciaux et pseudo différent de 'q'
+		while(pseudoCorrect==0){
+			memset(pseudo,0,sizeof(pseudo));
+			printf("Quel est votre pseudo ? (< 10 et sans espace) : ");
+			fgets(pseudo, 10, stdin);
+		
+			if(strchr(pseudo,'\n')==NULL){
+				viderBuffer();
+				printf("Pseudo trop long !\n");
+			}
+			else{
+				if(strcmp(pseudo,"q\n")==0 || strchr(pseudo,'/')!=NULL || strchr(pseudo,' ')!=NULL){
+					printf("Pseudo incorrect !\n");
+				}
+				else pseudoCorrect=1;
+			}
+		}
+		
+		//Envoi du pseudo
+		if ((write(socket_descriptor, pseudo, strlen(pseudo))) < 0) {
+			perror("erreur : impossible d'envoyer le pseudo au serveur.");
+			exit(1);
+		}
+		if((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
+			if(strcmp(buffer,"Pseudo Ok.\n")){
+				write(1,buffer,longueur);
+				pseudoLibre=1;
+			}	
+		}
+	}
 
 	pthread_t sniffer_thread;
 	new_sock = malloc(1);
