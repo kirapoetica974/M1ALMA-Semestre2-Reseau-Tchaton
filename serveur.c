@@ -22,7 +22,6 @@ struct PseudoSock{
  };
 PseudoSock tabPseudoSock[3];
 
-
 void *connection_handler(void *socket_desc){
 	// Initialisation des outils
 	char buffer[256];
@@ -40,138 +39,149 @@ void *connection_handler(void *socket_desc){
 	char bufferPrive[256];
 	char pseudoDestinataire[10];
 	int pseudoTrouve;
-
-	//Reception du pseudo client
-	if(longueur = read(sock, p, sizeof(p)) > 0){
-
-		//On enleve le retour chariot du pseudo
-		for(i=0;i<(sizeof(p)/sizeof(char));i++){
-			if(p[i]=='\n') {
-				pseudoClient[i]='\0';
-				break;
-			}			
-			else pseudoClient[i]=p[i];
-		}
-		
-		//Pseudo deja utilise ?
-		pseudoTrouve=0;
-		for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
-			if(strcmp(tabPseudoSock[i].pseudo,pseudoClient)==0){
-				pseudoTrouve=1;
-				break;
-			}
-		}
-		
-		if(pseudoTrouve==1) write(sock,"Pseudo deja utilise\n",strlen("Pseudo deja utilise\n"));
-
-		//Pseudo libre
-		else{
-			write(sock,"Pseudo Ok.\n",strlen("Pseudo Ok.\n"));
-			//Ajout du client dans le tableau de clients
-			i=0;
-			while(i<(sizeof(tabPseudoSock)/sizeof(PseudoSock)) && (trouveCaseLibre==0)){
-				if(tabPseudoSock[i].socket==0){				
-					trouveCaseLibre=1;
-					tabPseudoSock[i].socket=sock;
-					strcpy(tabPseudoSock[i].pseudo, pseudoClient);
-				}
-				i++;
-			}
-
-			//Message d'information
-			strcpy(infoPseudo,pseudoClient);
-			strcat(infoPseudo," connecte\n");
-
-			//Informe du nouvel utilisateur connecte aux clients
-			for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
-				if(tabPseudoSock[i].socket!=0 && tabPseudoSock[i].socket!=sock){
-					write(tabPseudoSock[i].socket, infoPseudo, strlen(infoPseudo));
-					printf("pseudo envoye : %s\n", infoPseudo);
-				}
-			}
-		}
-	}
-
-	memset(pseudoClient,0,sizeof(pseudoClient));
+	int debut = -1;
 
 	//Reception du message envoye par le client
 	while((longueur = read(sock, buffer, sizeof(buffer))) > 0 ){
 		printf("message recu -> %s \n",buffer);
 		
-		//Récupération du pseudo
-		for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
-			if(tabPseudoSock[i].socket==sock){
-				strcpy(pseudoClient,tabPseudoSock[i].pseudo);
-			}
-		}
-		
-		//Est ce que c'est un message privé ?
-		if(buffer[0]=='/'){
-			i=1;
-			j=0;
-			//Séparation du pseudo destinataire et du message
-			while(buffer[i]!=' '){
-				pseudoDestinataire[j] = buffer[i];
-				i++;
-				j++;
-			}
-			i++;
-			j=0;
-
-			while(buffer[i]!='\0'){					
-				bufferPrive[j]=buffer[i];
-				j++;
-				i++;
-			}
-					
-			//Composition du message privé
-			strcat(pseudoClient," : ");
-			strcpy(newBuffer,pseudoClient);
-			strcat(newBuffer,bufferPrive);
-
-			//Recherche de la socket associée au pseudo destinataire
-			i=0;
-			pseudoTrouve=0;	
-			while(i<(sizeof(tabPseudoSock)/sizeof(PseudoSock)) && pseudoTrouve==0){
-				if(strcmp(tabPseudoSock[i].pseudo,pseudoDestinataire)==0){
-					//Envoi du message privé
-					write(tabPseudoSock[i].socket, newBuffer, strlen(newBuffer));
-					pseudoTrouve=1;
-					printf("message prive envoye :  %s\n", newBuffer);
+		if(debut==-1){
+			
+			//On enleve le retour chariot du pseudo
+			for(i=0;i<(sizeof(buffer)/sizeof(char));i++){
+				if(buffer[i]=='\n') {
+					pseudoClient[i]='\0';
+					break;
+				}			
+				else{
+					pseudoClient[i]=buffer[i];
 				}
-				i++;
+			}
+
+			//Pseudo deja utilise ?
+			pseudoTrouve=0;
+			for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
+				if(strcmp(tabPseudoSock[i].pseudo,pseudoClient)==0){
+					pseudoTrouve=1;
+					break;
+				}
+			}
+		
+			//Précise au client que le pseudo ne peut pas etre pris
+			if(pseudoTrouve==1) {
+				printf("avant write");	
+				write(sock,"Pseudo deja utilise\n",strlen("Pseudo deja utilise\n"));
+				printf("apres");
 			}
 			
-			//Pseudo destinataire inexistant
-			if(pseudoTrouve==0){
-				write(sock, "Pseudo inexistant !\n", strlen("Pseudo inexistant !"));
-			}
-			//On remet à zéro les buffers
-			memset(buffer,0,sizeof(buffer));
-			memset(newBuffer,0,sizeof(newBuffer));
-			memset(bufferPrive,0,sizeof(bufferPrive));
-			memset(pseudoClient,0,sizeof(pseudoClient));
-			memset(pseudoDestinataire,0,sizeof(pseudoDestinataire));	
-		}
-		
-		//Message publique
-		else{
-			//Message a envoyer avec le pseudo récupéré
-			strcat(pseudoClient," : ");
-			strcpy(newBuffer,pseudoClient);
-			strcat(newBuffer,buffer);
+			//Pseudo libre
+			else{
+				write(sock,"Pseudo Ok.\n",strlen("Pseudo Ok.\n"));
+				//Ajout du client dans le tableau de clients
+				i=0;
+				while(i<(sizeof(tabPseudoSock)/sizeof(PseudoSock)) && (trouveCaseLibre==0)){
+					if(tabPseudoSock[i].socket==0){				
+						trouveCaseLibre=1;
+						tabPseudoSock[i].socket=sock;
+						strcpy(tabPseudoSock[i].pseudo, pseudoClient);
+					}
+					i++;
+				}
 
-			//On envoie a tous les clients
+				//Message d'information
+				strcpy(infoPseudo,pseudoClient);
+				strcat(infoPseudo," connecte\n");
+
+				//Informe du nouvel utilisateur connecte aux clients
+				for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
+					if(tabPseudoSock[i].socket!=0 && tabPseudoSock[i].socket!=sock){
+						write(tabPseudoSock[i].socket, infoPseudo, strlen(infoPseudo));
+						printf("pseudo envoye : %s\n", infoPseudo);
+					}
+				}
+				debut=0;	
+				memset(buffer,0,sizeof(buffer));
+			}			
+			
+		}
+
+		//Message normal debut != -1
+		else{
+			//Récupération du pseudo
 			for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
-				if(tabPseudoSock[i].socket!=0 && tabPseudoSock[i].socket!=sock){
-					write(tabPseudoSock[i].socket, newBuffer, strlen(newBuffer));
-					printf("message envoye :  %s\n", newBuffer);
+				if(tabPseudoSock[i].socket==sock){
+					strcpy(pseudoClient,tabPseudoSock[i].pseudo);
 				}
 			}
-			//On remet à zéro le buffer
-			memset(buffer,0,sizeof(buffer));
-			memset(newBuffer,0,sizeof(newBuffer));
-			memset(pseudoClient,0,sizeof(pseudoClient));
+		
+			//Est ce que c'est un message privé ?
+			if(buffer[0]=='/'){
+				i=1;
+				j=0;
+				//Séparation du pseudo destinataire et du message
+				while(buffer[i]!=' '){
+					pseudoDestinataire[j] = buffer[i];
+					i++;
+					j++;
+				}
+				i++;
+				j=0;
+
+				while(buffer[i]!='\0'){					
+					bufferPrive[j]=buffer[i];
+					j++;
+					i++;
+				}
+					
+				//Composition du message privé
+				strcat(pseudoClient," : ");
+				strcpy(newBuffer,pseudoClient);
+				strcat(newBuffer,bufferPrive);
+
+				//Recherche de la socket associée au pseudo destinataire
+				i=0;
+				pseudoTrouve=0;	
+				while(i<(sizeof(tabPseudoSock)/sizeof(PseudoSock)) && pseudoTrouve==0){
+					if(strcmp(tabPseudoSock[i].pseudo,pseudoDestinataire)==0){
+						//Envoi du message privé
+						write(tabPseudoSock[i].socket, newBuffer, strlen(newBuffer));
+						pseudoTrouve=1;
+						printf("message prive envoye :  %s\n", newBuffer);
+					}
+					i++;
+				}
+			
+				//Pseudo destinataire inexistant
+				if(pseudoTrouve==0){
+					write(sock, "Pseudo inexistant !\n", strlen("Pseudo inexistant !"));
+				}
+				//On remet à zéro les buffers
+				memset(buffer,0,sizeof(buffer));
+				memset(newBuffer,0,sizeof(newBuffer));
+				memset(bufferPrive,0,sizeof(bufferPrive));
+				memset(pseudoClient,0,sizeof(pseudoClient));
+				memset(pseudoDestinataire,0,sizeof(pseudoDestinataire));	
+			}
+		
+			//Message publique
+			else{
+				//Message a envoyer avec le pseudo récupéré
+				strcat(pseudoClient," : ");
+				strcpy(newBuffer,pseudoClient);
+				strcat(newBuffer,buffer);
+
+				//On envoie a tous les clients
+				for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
+					if(tabPseudoSock[i].socket!=0){
+						write(tabPseudoSock[i].socket, newBuffer, strlen(newBuffer));
+						printf("message envoye :  %s\n", newBuffer);
+					}
+				}
+				//On remet à zéro le buffer
+				memset(buffer,0,sizeof(buffer));
+				memset(newBuffer,0,sizeof(newBuffer));
+				memset(pseudoClient,0,sizeof(pseudoClient));
+			}
 		}
 	}
 
@@ -187,7 +197,8 @@ void *connection_handler(void *socket_desc){
 				strcpy(tabPseudoSock[i].pseudo, "");
 			}
 			i++;
-		}	
+		}
+		close(sock);
 		fflush(stdout);
 	}
 	else if(longueur == -1){
@@ -267,8 +278,7 @@ main(int argc, char **argv) {
 	longueur_adresse_courante = sizeof(adresse_client_courant);
 
     /* attente des connexions et traitement des donnees recues */
-    /*for(;;) {*/
-		
+
 	/* adresse_client_courant sera renseigné par accept via les infos du connect */
 	while((nouv_socket_descriptor = accept(socket_descriptor, (sockaddr*)(&adresse_client_courant), &longueur_adresse_courante)) ){
 		
@@ -291,9 +301,6 @@ main(int argc, char **argv) {
 		perror("refus du client");
 		return 1;
 	}
-		
-	/* traitement du message */
-	//close(nouv_socket_descriptor);
 		
     return 0;
     
