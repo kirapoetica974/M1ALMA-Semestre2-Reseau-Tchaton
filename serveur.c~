@@ -9,6 +9,7 @@ Serveur à lancer avant le client
 #include <string.h> 		/* pour bcopy, ... */  
 #include<pthread.h>
 #define TAILLE_MAX_NOM 256
+#define TAILLE_SERVEUR_MAX 2
 
 typedef struct sockaddr sockaddr;
 typedef struct sockaddr_in sockaddr_in;
@@ -20,7 +21,9 @@ struct PseudoSock{
 	int socket;
 	char pseudo[10];
  };
-PseudoSock tabPseudoSock[3];
+PseudoSock tabPseudoSock[TAILLE_SERVEUR_MAX];
+
+int nbClient=0;
 
 void *connection_handler(void *socket_desc){
 	// Initialisation des outils
@@ -35,11 +38,22 @@ void *connection_handler(void *socket_desc){
 	int j;
 	int trouveCaseLibre = 0;
 	char infoPseudo[30];
-	char newBuffer[272];
+	char newBuffer[280];
 	char bufferPrive[256];
 	char pseudoDestinataire[10];
 	int pseudoTrouve;
 	int debut = -1;
+
+	
+	//Est ce que le serveur est plein ?
+	printf("nbCli:%d TailleMax:%d",nbClient,TAILLE_SERVEUR_MAX);
+	if(nbClient==TAILLE_SERVEUR_MAX){
+		printf("close");
+		write(sock,"Serveur sature\n",strlen("Serveur sature\n"));
+		close(sock);
+	}
+	
+	else{write(sock,"Serveur OK\n",strlen("Serveur OK\n"));}
 
 	//Reception du message envoye par le client
 	while((longueur = read(sock, buffer, sizeof(buffer))) > 0 ){
@@ -77,8 +91,10 @@ void *connection_handler(void *socket_desc){
 			//Pseudo libre
 			else{
 				write(sock,"Pseudo Ok.\n",strlen("Pseudo Ok.\n"));
+				
 				//Ajout du client dans le tableau de clients
 				i=0;
+				nbClient++;
 				while(i<(sizeof(tabPseudoSock)/sizeof(PseudoSock)) && (trouveCaseLibre==0)){
 					if(tabPseudoSock[i].socket==0){				
 						trouveCaseLibre=1;
@@ -99,8 +115,22 @@ void *connection_handler(void *socket_desc){
 						printf("pseudo envoye : %s\n", infoPseudo);
 					}
 				}
-				debut=0;	
+				debut=0;
+				
+				memset(infoPseudo,0,sizeof(infoPseudo));
+
+				//Envoyer la liste des connectés
+				for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
+					if(tabPseudoSock[i].socket!=0 && tabPseudoSock[i].socket!=sock){
+						strcpy(infoPseudo,tabPseudoSock[i].pseudo);
+						strcat(infoPseudo,"\n");
+						write(sock,infoPseudo,strlen(infoPseudo));
+					}
+				}			
+				
 				memset(buffer,0,sizeof(buffer));
+				memset(infoPseudo,0,sizeof(infoPseudo));
+				memset(pseudoClient,0,sizeof(pseudoClient));
 			}			
 			
 		}
@@ -134,7 +164,8 @@ void *connection_handler(void *socket_desc){
 				}
 					
 				//Composition du message privé
-				strcat(pseudoClient," : ");
+				
+				strcat(pseudoClient,"(privé) : ");
 				strcpy(newBuffer,pseudoClient);
 				strcat(newBuffer,bufferPrive);
 
@@ -153,7 +184,7 @@ void *connection_handler(void *socket_desc){
 			
 				//Pseudo destinataire inexistant
 				if(pseudoTrouve==0){
-					write(sock, "Pseudo inexistant !\n", strlen("Pseudo inexistant !"));
+					write(sock, "Pseudo inexistant !\n", strlen("Pseudo inexistant !\n"));
 				}
 				//On remet à zéro les buffers
 				memset(buffer,0,sizeof(buffer));
@@ -172,7 +203,7 @@ void *connection_handler(void *socket_desc){
 
 				//On envoie a tous les clients
 				for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
-					if(tabPseudoSock[i].socket!=0 && tabPseudoSock[i].socket!=sock){
+					if(tabPseudoSock[i].socket!=0){
 						write(tabPseudoSock[i].socket, newBuffer, strlen(newBuffer));
 						printf("message envoye :  %s\n", newBuffer);
 					}
@@ -189,6 +220,28 @@ void *connection_handler(void *socket_desc){
 		i=0;
 		int trouveClientDeco = 0;
 		printf("Client deconnecte\n");
+		int trouvePseudoDeco;		
+
+		//Message de deconnexion
+		for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
+			if(tabPseudoSock[i].socket==sock){
+				strcpy(pseudoClient,tabPseudoSock[i].pseudo);
+				break;
+			}
+		}		
+
+		strcpy(infoPseudo,pseudoClient);
+		strcat(infoPseudo," deconnecte\n");
+
+		//Informe tout le monde de la deconnexion du client
+		for(i=0;i<(sizeof(tabPseudoSock)/sizeof(PseudoSock));i++){
+			if(tabPseudoSock[i].socket!=0 && tabPseudoSock[i].socket!=sock){
+				write(tabPseudoSock[i].socket, infoPseudo, strlen(infoPseudo));
+				printf("pseudo envoye : %s\n", infoPseudo);
+			}
+		}
+
+		//Suppression du client dans le tableau
 		while(i<(sizeof(tabPseudoSock)/sizeof(PseudoSock)) && (trouveClientDeco==0)){
 			if(tabPseudoSock[i].socket==sock){				
 				trouveClientDeco=1;
@@ -198,6 +251,7 @@ void *connection_handler(void *socket_desc){
 			}
 			i++;
 		}
+		nbClient--;
 		close(sock);
 		fflush(stdout);
 	}

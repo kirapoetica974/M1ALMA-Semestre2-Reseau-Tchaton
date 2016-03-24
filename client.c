@@ -40,7 +40,7 @@ void *connection_handler(void *socket_desc){
 	char pseudo[10];
 	int pseudoCorrect=0;
 
-	printf("Ecrivez votre message...\n");
+	//printf("Ecrivez votre message...\n");
 
 	while(1)
 	{
@@ -68,14 +68,14 @@ void *connection_handler(void *socket_desc){
 				exit(1);
 			}
 		}
-		printf("Ecrivez votre message...\n");
+		//printf("Ecrivez votre message...\n");
 	}
 	return 0;
 }
 
 void *timer(void *socket_desc){
 	int sock = *(int*)socket_desc;	
-	while(temps<10){
+	while(temps<1800){
 		sleep(1);
 		temps++;
 	}
@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
     sockaddr_in adresse_locale; 	/* adresse de socket local */
     hostent *	ptr_host; 		/* info sur une machine hote */
     servent *	ptr_service; 		/* info sur service */
-    char 	buffer[256];
+    char 	buffer[280];
     char *	prog; 			/* nom du programme */
     char *	host; 			/* nom de la machine distante */
      
@@ -106,6 +106,8 @@ int main(int argc, char **argv) {
     prog = argv[0];
     host = argv[1];
     
+    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+
     printf("- Nom de l'executable : %s \n", prog);
     printf("- Adresse du serveur  : %s \n", host);
 
@@ -170,6 +172,23 @@ int main(int argc, char **argv) {
 	char pseudo[10];
 	int pseudoCorrect=0;
 	int debutRead=-1;
+	
+	printf("\n\n\n");
+
+	printf("-------------------------\n");
+	printf("| Bienvenue sur Tchaton |\n");
+	printf("-------------------------\n");
+
+	printf("\n\n\n");
+	
+	if((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {		
+		if(strcmp(buffer,"Serveur sature\n")==0){
+			printf("\nDeconnexion\n");
+			close(socket_descriptor);
+			exit(0);    
+		}
+	}
+	
 
 	while(debutRead==-1){
 		//Controle du pseudo (pas de caracteres spéciaux et pseudo différent de 'q'
@@ -207,6 +226,8 @@ int main(int argc, char **argv) {
 		if((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {		
 			write(1,buffer,longueur);
 			if(strcmp(buffer,"Pseudo Ok.\n")==0){
+				printf("------------------------\n");
+				printf("Liste des connectés :\n");
 				debutRead=0;
 			}
 		}
@@ -225,7 +246,7 @@ int main(int argc, char **argv) {
 		if((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
 			write(1,buffer,longueur);
 			memset(buffer,0,sizeof(buffer));
-			printf("Ecrivez votre message...\n");
+			//printf("Ecrivez votre message...\n");
 		}
 	}
 }
